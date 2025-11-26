@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chore Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      padding: 16px;
+      background: #0e1117;
+      color: #e5e7eb;
+    }
+    h1, h2, h3 {
+      margin-top: 0;
+    }
+    .card {
+      background: #111827;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    input, select, button {
+      padding: 6px 8px;
+      margin: 4px 0;
+      border-radius: 6px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+    }
+    button {
+      cursor: pointer;
+    }
+    button.primary {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+    button.primary:hover {
+      background: #1d4ed8;
+    }
+    .hidden {
+      display: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    th, td {
+      border-bottom: 1px solid #1f2933;
+      padding: 4px 6px;
+      text-align: left;
+    }
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #1f2937;
+    }
+    .pill.required {
+      background: #b91c1c;
+    }
+    .row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .col {
+      flex: 1 1 280px;
+    }
+    small {
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧼 Chore Tracker (Web Prototype)</h1>
+
+  <!-- LOGIN -->
+  <div class="card" id="login-card">
+    <h2>Log in</h2>
+    <p>Type your name. If you are <b>Aaron</b> or <b>Janet</b>, you'll be a parent. Everyone else is a child.</p>
+    <input id="name-input" type="text" placeholder="Your name" />
+    <button class="primary" id="login-btn">Log in</button>
+    <div id="login-error" style="color:#f97373; margin-top:4px;"></div>
+  </div>
+
+  <!-- PARENT UI -->
+  <div id="parent-ui" class="hidden">
+    <div class="card">
+      <h2>👩‍👧 Parent dashboard</h2>
+      <p>Logged in as <b><span id="parent-name"></span></b></p>
+      <button id="parent-switch-btn">Switch user</button>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <!-- New chore form -->
+        <div class="card">
+          <h3>Create a new chore</h3>
+          <div>
+            <label>Chore name<br />
+              <input id="chore-name" type="text" />
+            </label>
+          </div>
+          <div>
+            <label>Timing<br />
+              <select id="chore-timing">
+                <option value="daily">Daily</option>
+                <option value="adhoc">Ad-hoc</option>
+                <option value="weekly">Weekly</option>
+              </select>
+            </label>
+          </div>
+          <div>
+            <label>Price<br />
+              <input id="chore-price" type="number" step="0.01" />
+            </label>
+          </div>
+          <div>
+            <label>Emoji<br />
+              <input id="chore-emoji" type="text" placeholder="🧼" />
+            </label>
+          </div>
+          <div>
+            <label>
+              <input id="chore-required" type="checkbox" />
+              Required to qualify for allowance
+            </label>
+          </div>
+          <button class="primary" id="create-chore-btn">Create chore</button>
+          <div id="create-chore-msg"></div>
+        </div>
+      </div>
+
+      <div class="col">
+        <!-- Chore report -->
+        <div class="card">
+          <h3>Chore report (last 7 days)</h3>
+          <button id="refresh-report-btn">Refresh report</button>
+          <div id="report-container" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Reconcile allowance</h3>
+      <button id="load-reconcile-btn">Load summary</button>
+      <div id="reconcile-container" style="margin-top:8px;"></div>
+    </div>
+  </div>
+
+  <!-- CHILD UI -->
+  <div id="child-ui" class="hidden">
+    <div class="card">
+      <h2>🧒 Child dashboard</h2>
+      <p>Hi <b><span id="child-name"></span></b>! Current balance: <b><span id="child-balance"></span></b></p>
+      <button id="child-switch-btn">Switch user</button>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <div class="card">
+          <h3>Your completed chores (last 7 days)</h3>
+          <div id="child-completions"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3>Available chores</h3>
+          <div id="child-chores"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentUser = null; // { name, role, balance }
+
+    // Helpers
+    function show(id) {
+      document.getElementById(id).classList.remove("hidden");
+    }
+    function hide(id) {
+      document.getElementById(id).classList.add("hidden");
+    }
+    function fmtMoney(amount) {
+      return "$" + amount.toFixed(2);
+    }
+
+    async function api(path, options = {}) {
+      const res = await fetch(path, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        ...options,
+      });
+      if (!res.ok) {
+        let msg = "Error " + res.status;
+        try {
+          const data = await res.json();
+          if (data.error) msg = data.error;
+        } catch {}
+        throw new Error(msg);
+      }
+      return res.json();
+    }
+
+    // LOGIN
+    document.getElementById("login-btn").addEventListener("click", async () => {
+      const nameInput = document.getElementById("name-input");
+      const errorDiv = document.getElementById("login-error");
+      errorDiv.textContent = "";
+
+      const name = nameInput.value.trim();
+      if (!name) {
+        errorDiv.textContent = "Please enter a name.";
+        return;
+      }
+
+      try {
+        const user = await api("/api/login", {
+          method: "POST",
+          body: JSON.stringify({ name }),
+        });
+        currentUser = user;
+
+        // Show appropriate UI
+        if (user.role === "parent") {
+          document.getElementById("parent-name").textContent = user.name;
+          hide("login-card");
+          show("parent-ui");
+        } else {
+          document.getElementById("child-name").textContent = user.name;
+          hide("login-card");
+          show("child-ui");
+          await loadChildView();
+        }
+      } catch (err) {
+        errorDiv.textContent = err.message;
+      }
+    });
+
+    document.getElementById("parent-switch-btn").addEventListener("click", () => {
+      currentUser = null;
+      show("login-card");
+      hide("parent-ui");
+      document.getElementById("name-input").value = "";
+    });
+
+    document.getElementById("child-switch-btn").addEventListener("click", () => {
+      currentUser = null;
+      show("login-card");
+      hide("child-ui");
+      document.getElementById("name-input").value = "";
+    });
+
+    // PARENT: create chore
+    document.getElementById("create-chore-btn").addEventListener("click", async () => {
+      const nameEl = document.getElementById("chore-name");
+      const timingEl = document.getElementById("chore-timing");
+      const priceEl = document.getElementById("chore-price");
+      const emojiEl = document.getElementById("chore-emoji");
+      const requiredEl = document.getElementById("chore-required");
+      const msgEl = document.getElementById("create-chore-msg");
+
+      msgEl.textContent = "";
+
+      const name = nameEl.value.trim();
+      const timing = timingEl.value;
+      const price = parseFloat(priceEl.value);
+      const emoji = emojiEl.value.trim();
+      const required = requiredEl.checked;
+
+      if (!name || isNaN(price)) {
+        msgEl.style.color = "#f97373";
+        msgEl.textContent = "Chore name and price are required.";
+        return;
+      }
+
+      try {
+        const chore = await api("/api/chores", {
+          method: "POST",
+          body: JSON.stringify({ name, timing, price, emoji, required }),
+        });
+        msgEl.style.color = "#6ee7b7";
+        msgEl.textContent = "Chore created: " + chore.emoji + " " + chore.name;
+
+        // reset form a bit
+        nameEl.value = "";
+        priceEl.value = "";
+        emojiEl.value = "";
+        requiredEl.checked = false;
+      } catch (err) {
+        msgEl.style.color = "#f97373";
+        msgEl.textContent = err.message;
+      }
+    });
+
+    // PARENT: report
+    document.getElementById("refresh-report-btn").addEventListener("click", async () => {
+      const container = document.getElementById("report-container");
+      container.innerHTML = "Loading...";
+
+      try {
+        const report = await api("/api/report");
+
+        if (!report.length) {
+          container.innerHTML = "<p>No children have completed chores in the last week.</p>";
+          return;
+        }
+
+        container.innerHTML = "";
+        report.forEach(child => {
+          const div = document.createElement("div");
+          div.style.marginBottom = "16px";
+
+          const header = document.createElement("h4");
+          header.textContent = `Child: ${child.childName} (Total: ${fmtMoney(child.total)})`;
+          div.appendChild(header);
+
+          if (!child.items.length) {
+            const p = document.createElement("p");
+            p.textContent = "No chores completed in the last week.";
+            div.appendChild(p);
+          } else {
+            const table = document.createElement("table");
+            const thead = document.createElement("thead");
+            thead.innerHTML = "<tr><th>Chore</th><th>Timing</th><th>Count</th><th>Value</th></tr>";
+            table.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+            child.items.forEach(item => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td>${item.emoji} ${item.name} ${item.required ? '<span class="pill required">required</span>' : ""}</td>
+                <td>${item.timing}</td>
+                <td>${item.count}</td>
+                <td>${fmtMoney(item.value)}</td>
+              `;
+              tbody.appendChild(tr);
+            });
+
+            table.appendChild(tbody);
+            div.appendChild(table);
+          }
+
+          container.appendChild(div);
+        });
+      } catch (err) {
+        container.innerHTML = `<p style="color:#f97373;">${err.message}</p>`;
+      }
+    });
+
+    // PARENT: reconcile
+    document.getElementById("load-reconcile-btn").addEventListener("click", async () => {
+      const container = document.getElementById("reconcile-container");
+      container.innerHTML = "Loading...";
+
+      try {
+        const summary = await api("/api/reconcile-summary");
+
+        if (!summary.length) {
+          container.innerHTML = "<p>No children to reconcile.</p>";
+          return;
+        }
+
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        thead.innerHTML = "<tr><th>Child</th><th>Earned (last week)</th><th>Current balance</th><th>Pay</th></tr>";
+        table.appendChild(thead);
+
+        const tbody = document.createElement("tbody");
+        summary.forEach(row => {
+          const tr = document.createElement("tr");
+
+          const childTd = document.createElement("td");
+          childTd.textContent = row.childName;
+
+          const earnedTd = document.createElement("td");
+          earnedTd.textContent = fmtMoney(row.earned);
+
+          const balTd = document.createElement("td");
+          balTd.textContent = fmtMoney(row.currentBalance);
+
+          const actionTd = document.createElement("td");
+          const btn = document.createElement("button");
+          btn.textContent = row.earned > 0 ? `Pay ${fmtMoney(row.earned)}` : "Add custom";
+          btn.addEventListener("click", async () => {
+            const defaultAmount = row.earned > 0 ? row.earned : 0;
+            const input = prompt(
+              `How much to transfer to ${row.childName}?`,
+              defaultAmount ? defaultAmount.toFixed(2) : ""
+            );
+            if (!input) return;
+            const amount = parseFloat(input);
+            if (isNaN(amount) || amount <= 0) {
+              alert("Invalid amount");
+              return;
+            }
+            try {
+              const result = await api("/api/reconcile", {
+                method: "POST",
+                body: JSON.stringify({ childName: row.childName, amount }),
+              });
+              alert(
+                `Transferred ${fmtMoney(result.amount)} to ${result.childName}. New balance: ${fmtMoney(result.newBalance)}`
+              );
+              // Refresh summary
+              document.getElementById("load-reconcile-btn").click();
+            } catch (err) {
+              alert(err.message);
+            }
+          });
+          actionTd.appendChild(btn);
+
+          tr.appendChild(childTd);
+          tr.appendChild(earnedTd);
+          tr.appendChild(balTd);
+          tr.appendChild(actionTd);
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        container.innerHTML = "";
+        container.appendChild(table);
+      } catch (err) {
+        container.innerHTML = `<p style="color:#f97373;">${err.message}</p>`;
+      }
+    });
+
+    // CHILD: load view (completions + chores)
+    async function loadChildView() {
+      if (!currentUser) return;
+      const name = currentUser.name;
+
+      // Completed chores
+      const completionsDiv = document.getElementById("child-completions");
+      completionsDiv.innerHTML = "Loading...";
+      const balSpan = document.getElementById("child-balance");
+
+      try {
+        const data = await api(`/api/child/${encodeURIComponent(name)}/completions`);
+        balSpan.textContent = fmtMoney(data.balance);
+
+        if (!data.items.length) {
+          completionsDiv.innerHTML = "<p>No chores completed in the last 7 days yet.</p>";
+        } else {
+          const table = document.createElement("table");
+          const thead = document.createElement("thead");
+          thead.innerHTML = "<tr><th>Chore</th><th>Timing</th><th>Count</th><th>Value</th></tr>";
+          table.appendChild(thead);
+          const tbody = document.createElement("tbody");
+
+          data.items.forEach(item => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${item.emoji} ${item.name} ${item.required ? '<span class="pill required">required</span>' : ""}</td>
+              <td>${item.timing}</td>
+              <td>${item.count}</td>
+              <td>${fmtMoney(item.value)}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(tbody);
+          completionsDiv.innerHTML = "";
+          completionsDiv.appendChild(table);
+
+          const note = document.createElement("p");
+          note.innerHTML = `<small>Total potential value: ${fmtMoney(
+            data.total
+          )}. Your parent still needs to reconcile to move this into your balance.</small>`;
+          completionsDiv.appendChild(note);
+        }
+      } catch (err) {
+        completionsDiv.innerHTML = `<p style="color:#f97373;">${err.message}</p>`;
+      }
+
+      // Available chores
+      const choresDiv = document.getElementById("child-chores");
+      choresDiv.innerHTML = "Loading...";
+      try {
+        const chores = await api("/api/chores");
+        if (!chores.length) {
+          choresDiv.innerHTML = "<p>No chores available yet. Ask a parent to add some.</p>";
+          return;
+        }
+
+        const table = document.createElement("table");
+        const thead = document.createElement("thead");
+        thead.innerHTML = "<tr><th>Chore</th><th>Timing</th><th>Price</th><th></th></tr>";
+        table.appendChild(thead);
+        const tbody = document.createElement("tbody");
+
+        chores.forEach(chore => {
+          const tr = document.createElement("tr");
+          const btn = document.createElement("button");
+          btn.textContent = "I did this!";
+          btn.addEventListener("click", async () => {
+            try {
+              await api(`/api/child/${encodeURIComponent(name)}/complete`, {
+                method: "POST",
+                body: JSON.stringify({ choreId: chore.id }),
+              });
+              alert(`Nice work! Recorded: ${chore.emoji} ${chore.name}`);
+              await loadChildView();
+            } catch (err) {
+              alert(err.message);
+            }
+          });
+
+          const pill = chore.required ? '<span class="pill required">required</span>' : "";
+
+          tr.innerHTML = `
+            <td>${chore.emoji} ${chore.name} ${pill}</td>
+            <td>${chore.timing}</td>
+            <td>${fmtMoney(chore.price)}</td>
+            <td></td>
+          `;
+          tr.lastElementChild.appendChild(btn);
+
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(tbody);
+        choresDiv.innerHTML = "";
+        choresDiv.appendChild(table);
+      } catch (err) {
+        choresDiv.innerHTML = `<p style="color:#f97373;">${err.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
