@@ -158,3 +158,4 @@ This is a prototype application. For improvements or modifications, edit the `ap
 ## License
 
 This project is a personal prototype and is not licensed for distribution.
+
