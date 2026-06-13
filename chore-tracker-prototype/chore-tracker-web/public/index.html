@@ -5,533 +5,97 @@
   <title>Chore Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      padding: 16px;
-      background: #0e1117;
-      color: #e5e7eb;
-    }
-    h1, h2, h3 {
-      margin-top: 0;
-    }
-    .card {
-      background: #111827;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    }
-    input, select, button {
-      padding: 6px 8px;
-      margin: 4px 0;
-      border-radius: 6px;
-      border: 1px solid #374151;
-      background: #020617;
-      color: #e5e7eb;
-    }
-    button {
-      cursor: pointer;
-    }
-    button.primary {
-      background: #2563eb;
-      border-color: #2563eb;
-    }
-    button.primary:hover {
-      background: #1d4ed8;
-    }
-    .hidden {
-      display: none;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 8px;
-    }
-    th, td {
-      border-bottom: 1px solid #1f2933;
-      padding: 4px 6px;
-      text-align: left;
-    }
-    .pill {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 12px;
-      background: #1f2937;
-    }
-    .pill.required {
-      background: #b91c1c;
-    }
-    .row {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .col {
-      flex: 1 1 280px;
-    }
-    small {
-      color: #9ca3af;
-    }
+    :root{color-scheme:dark;--bg:#0e1117;--card:#111827;--soft:#172033;--txt:#e5e7eb;--muted:#9ca3af;--line:#374151;--blue:#2563eb;--green:#10b981}
+    *{box-sizing:border-box} body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top left,rgba(37,99,235,.18),transparent 28rem),var(--bg);color:var(--txt);max-width:1180px;margin:0 auto;padding:16px}
+    h1,h2,h3{margin-top:0}.card{background:rgba(17,24,39,.96);border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:16px;margin:0 0 16px;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+    input,select,button{padding:9px 10px;margin:4px 0;border-radius:10px;border:1px solid var(--line);background:#020617;color:var(--txt);font-size:15px}button{cursor:pointer}button.primary{background:var(--blue);border-color:var(--blue);font-weight:700}button.success{background:var(--green);border-color:var(--green);color:#04130e;font-weight:800}.hidden{display:none!important}
+    .row{display:flex;gap:16px;flex-wrap:wrap}.col{flex:1 1 320px;min-width:0}.muted,small{color:var(--muted)}.error{color:#fca5a5}.ok{color:#6ee7b7}.msg{min-height:1.3rem;margin-top:6px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border-bottom:1px solid #1f2933;padding:8px 6px;text-align:left;vertical-align:top}th{color:var(--muted);font-size:13px}.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;background:#1f2937}.required{background:#7f1d1d;color:#fecaca}.repeatable{background:#064e3b;color:#bbf7d0}
+    .camera{display:grid;grid-template-columns:minmax(240px,420px) 1fr;gap:16px}.cameraBox{position:relative;overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.12);background:#020617;aspect-ratio:4/3}.cameraBox video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}.guide{pointer-events:none;position:absolute;inset:12%;border:3px dashed rgba(255,255,255,.62);border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.22)}
+    .stats,.menu{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.stat,.tile,.soft{background:var(--soft);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:12px}.stat strong{display:block;font-size:22px}.tile{min-height:150px;display:flex;flex-direction:column;gap:8px}.emoji{font-size:34px}.name{font-size:18px;font-weight:800}.price{font-size:22px;font-weight:900;color:#bbf7d0}.push{margin-top:auto}
+    .edit{display:grid;grid-template-columns:minmax(150px,1fr) 95px 95px 70px 90px 90px;gap:6px;align-items:center;margin:8px 0}@media(max-width:760px){.camera{grid-template-columns:1fr}.edit{grid-template-columns:1fr 1fr}}
   </style>
 </head>
 <body>
-  <h1>🧼 Chore Tracker (Web Prototype)</h1>
+  <h1>🧼 Chore Tracker</h1>
+  <p class="muted">Family allowance kiosk. Friendly photo login; not Fort Knox.</p>
 
-  <!-- LOGIN -->
-  <div class="card" id="login-card">
-    <h2>Log in</h2>
-    <p>Type your name. If you are <b>Aaron</b> or <b>Janet</b>, you'll be a parent. Everyone else is a child.</p>
-    <input id="name-input" type="text" placeholder="Your name" />
-    <button class="primary" id="login-btn">Log in</button>
-    <div id="login-error" style="color:#f97373; margin-top:4px;"></div>
-  </div>
-
-  <!-- PARENT UI -->
-  <div id="parent-ui" class="hidden">
-    <div class="card">
-      <h2>👩‍👧 Parent dashboard</h2>
-      <p>Logged in as <b><span id="parent-name"></span></b></p>
-      <button id="parent-switch-btn">Switch user</button>
+  <section id="login" class="card">
+    <h2>Log in with your face</h2>
+    <p>Type your name, start the camera, and put your face inside the oval. First photo enrolls you. Aaron and Janet are parents; everyone else is a kid.</p>
+    <div class="camera">
+      <div class="cameraBox"><video id="video" autoplay playsinline muted></video><div class="guide"></div></div>
+      <div>
+        <label>Your name<br><input id="loginName" placeholder="Ben" autocomplete="off"></label><br>
+        <button id="startCam">Start camera</button>
+        <button id="faceLogin" class="primary">Take photo & log in</button>
+        <details><summary class="muted">Camera not cooperating?</summary><button id="nameLogin">Use name-only local login</button></details>
+        <div id="loginErr" class="msg error"></div><div id="loginInfo" class="msg ok"></div>
+      </div>
     </div>
+    <canvas id="snap" class="hidden" width="320" height="320"></canvas>
+  </section>
 
+  <section id="parent" class="hidden">
+    <div class="card"><h2>👩‍👧 Parent dashboard</h2><p>Logged in as <b id="parentName"></b></p><button onclick="switchUser()">Switch user</button></div>
     <div class="row">
-      <div class="col">
-        <!-- New chore form -->
-        <div class="card">
-          <h3>Create a new chore</h3>
-          <div>
-            <label>Chore name<br />
-              <input id="chore-name" type="text" />
-            </label>
-          </div>
-          <div>
-            <label>Timing<br />
-              <select id="chore-timing">
-                <option value="daily">Daily</option>
-                <option value="adhoc">Ad-hoc</option>
-                <option value="weekly">Weekly</option>
-              </select>
-            </label>
-          </div>
-          <div>
-            <label>Price<br />
-              <input id="chore-price" type="number" step="0.01" />
-            </label>
-          </div>
-          <div>
-            <label>Emoji<br />
-              <input id="chore-emoji" type="text" placeholder="🧼" />
-            </label>
-          </div>
-          <div>
-            <label>
-              <input id="chore-required" type="checkbox" />
-              Required to qualify for allowance
-            </label>
-          </div>
-          <button class="primary" id="create-chore-btn">Create chore</button>
-          <div id="create-chore-msg"></div>
-        </div>
+      <div class="col card"><h3>Create chore</h3>
+        <input id="cName" placeholder="Empty dishwasher"><br>
+        <select id="cTiming"><option value="daily">Daily: once per day</option><option value="adhoc">Ad-hoc: repeatable</option><option value="weekly">Weekly: once per week</option></select><br>
+        <input id="cPrice" type="number" step="0.01" placeholder="1.00"><br>
+        <input id="cEmoji" placeholder="🧼"><br>
+        <label><input id="cReq" type="checkbox"> Required</label><br>
+        <button id="createChore" class="primary">Create chore</button><div id="createMsg" class="msg"></div>
       </div>
-
-      <div class="col">
-        <!-- Chore report -->
-        <div class="card">
-          <h3>Chore report (last 7 days)</h3>
-          <button id="refresh-report-btn">Refresh report</button>
-          <div id="report-container" style="margin-top:8px;"></div>
-        </div>
-      </div>
+      <div class="col card"><h3>Edit chores</h3><button onclick="loadChores()">Refresh</button><div id="choresEdit"></div></div>
     </div>
-
-    <div class="card">
-      <h3>Reconcile allowance</h3>
-      <button id="load-reconcile-btn">Load summary</button>
-      <div id="reconcile-container" style="margin-top:8px;"></div>
-    </div>
-  </div>
-
-  <!-- CHILD UI -->
-  <div id="child-ui" class="hidden">
-    <div class="card">
-      <h2>🧒 Child dashboard</h2>
-      <p>Hi <b><span id="child-name"></span></b>! Current balance: <b><span id="child-balance"></span></b></p>
-      <button id="child-switch-btn">Switch user</button>
-    </div>
-
     <div class="row">
+      <div class="col card"><h3>Report — last 7 days</h3><button onclick="loadReport()">Refresh</button><div id="report"></div></div>
       <div class="col">
-        <div class="card">
-          <h3>Your completed chores (last 7 days)</h3>
-          <div id="child-completions"></div>
-        </div>
-      </div>
-      <div class="col">
-        <div class="card">
-          <h3>Available chores</h3>
-          <div id="child-chores"></div>
-        </div>
+        <div class="card"><h3>Reconcile allowance</h3><button onclick="loadReconcile()">Load summary</button><div id="reconcile"></div></div>
+        <div class="card"><h3>Payments paid out</h3><button onclick="loadPayments()">Load payments</button><div id="payments"></div></div>
       </div>
     </div>
-  </div>
+  </section>
 
-  <script>
-    let currentUser = null; // { name, role, balance }
+  <section id="child" class="hidden">
+    <div class="card"><h2>🧒 Kid dashboard</h2><p>Hi <b id="childName"></b>!</p><button onclick="switchUser()">Switch user</button>
+      <div class="stats">
+        <div class="stat"><span class="muted">Today</span><strong id="todayTotal">$0.00</strong></div>
+        <div class="stat"><span class="muted">This week</span><strong id="weekTotal">$0.00</strong></div>
+        <div class="stat"><span class="muted">Ready to pay</span><strong id="unpaidTotal">$0.00</strong></div>
+        <div class="stat"><span class="muted">Paid out total</span><strong id="balance">$0.00</strong></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col card"><h3>Today's chore menu</h3><p class="muted">Daily and weekly chores disappear after they are recorded; ad-hoc chores can repeat.</p><div id="kidMenu"></div></div>
+      <div class="col card"><h3>Completed — last 7 days</h3><div id="kidDone"></div></div>
+    </div>
+  </section>
 
-    // Helpers
-    function show(id) {
-      document.getElementById(id).classList.remove("hidden");
-    }
-    function hide(id) {
-      document.getElementById(id).classList.add("hidden");
-    }
-    function fmtMoney(amount) {
-      return "$" + amount.toFixed(2);
-    }
+<script>
+let currentUser=null, stream=null;
+const $=id=>document.getElementById(id);
+const money=n=>"$"+Number(n||0).toFixed(2);
+const esc=s=>String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+async function api(path, options={}){const r=await fetch(path,{headers:{"Content-Type":"application/json"},...options});if(!r.ok){let m="Error "+r.status;try{const d=await r.json();if(d.error)m=d.error}catch{}throw new Error(m)}return r.json()}
+function stopCam(){if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}}
+async function startCam(){ $("loginErr").textContent=""; $("loginInfo").textContent=""; try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640},height:{ideal:480}},audio:false});$("video").srcObject=stream;$("loginInfo").textContent="Camera ready. Center your face."}catch(e){$("loginErr").textContent="Could not start camera: "+e.message}}
+function photoPasscode(){const v=$("video"); if(!v.videoWidth) throw new Error("Camera is not ready yet."); const c=$("snap"),ctx=c.getContext("2d"); const size=Math.min(v.videoWidth,v.videoHeight), sx=(v.videoWidth-size)/2, sy=(v.videoHeight-size)/2; c.width=320;c.height=320;ctx.save();ctx.scale(-1,1);ctx.drawImage(v,sx,sy,size,size,-320,0,320,320);ctx.restore(); const tiny=document.createElement("canvas"); tiny.width=tiny.height=16; const t=tiny.getContext("2d"); t.drawImage(c,0,0,16,16); const p=t.getImageData(0,0,16,16).data, signature=[]; for(let i=0;i<p.length;i+=4){signature.push(Number(((p[i]*.299+p[i+1]*.587+p[i+2]*.114)/255).toFixed(4)))} return {signature,thumbnail:c.toDataURL("image/jpeg",.72)}}
+async function finishLogin(u){currentUser=u;$("login").classList.add("hidden");stopCam(); if(u.role==="parent"){$("parentName").textContent=u.name;$("parent").classList.remove("hidden");$("child").classList.add("hidden");await Promise.allSettled([loadChores(),loadReport(),loadReconcile(),loadPayments()])}else{$("childName").textContent=u.name;$("child").classList.remove("hidden");$("parent").classList.add("hidden");await loadChild()}}
+function switchUser(){currentUser=null;$("login").classList.remove("hidden");$("parent").classList.add("hidden");$("child").classList.add("hidden");$("loginName").value=""}
+$("startCam").onclick=startCam;
+$("faceLogin").onclick=async()=>{const name=$("loginName").value.trim();$("loginErr").textContent="";if(!name)return $("loginErr").textContent="Please enter a name.";try{if(!stream)await startCam();const pic=photoPasscode();const u=await api("/api/auth/photo",{method:"POST",body:JSON.stringify({name,...pic})});$("loginInfo").textContent=u.message||"Logged in.";await finishLogin(u)}catch(e){$("loginErr").textContent=e.message}};
+$("nameLogin").onclick=async()=>{const name=$("loginName").value.trim();if(!name)return $("loginErr").textContent="Please enter a name.";try{await finishLogin(await api("/api/login",{method:"POST",body:JSON.stringify({name})}))}catch(e){$("loginErr").textContent=e.message}};
 
-    async function api(path, options = {}) {
-      const res = await fetch(path, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        ...options,
-      });
-      if (!res.ok) {
-        let msg = "Error " + res.status;
-        try {
-          const data = await res.json();
-          if (data.error) msg = data.error;
-        } catch {}
-        throw new Error(msg);
-      }
-      return res.json();
-    }
+$("createChore").onclick=async()=>{const payload={name:$("cName").value.trim(),timing:$("cTiming").value,price:parseFloat($("cPrice").value),emoji:$("cEmoji").value.trim(),required:$("cReq").checked}; if(!payload.name||isNaN(payload.price)){$("createMsg").className="msg error";return $("createMsg").textContent="Chore name and price are required."}try{const c=await api("/api/chores",{method:"POST",body:JSON.stringify(payload)});$("createMsg").className="msg ok";$("createMsg").textContent=`Created ${c.emoji} ${c.name}`;$("cName").value=$("cPrice").value=$("cEmoji").value="";$("cReq").checked=false;await loadChores()}catch(e){$("createMsg").className="msg error";$("createMsg").textContent=e.message}};
+async function loadChores(){const box=$("choresEdit");box.innerHTML="Loading...";try{const chores=await api("/api/chores"); if(!chores.length){box.innerHTML="<p>No chores yet.</p>";return} box.innerHTML=""; chores.forEach(c=>{const row=document.createElement("div");row.className="edit";row.innerHTML=`<input data-f="name" value="${esc(c.name)}"><select data-f="timing"><option value="daily"${c.timing==="daily"?" selected":""}>daily</option><option value="adhoc"${c.timing==="adhoc"?" selected":""}>adhoc</option><option value="weekly"${c.timing==="weekly"?" selected":""}>weekly</option></select><input data-f="price" type="number" step="0.01" value="${Number(c.price).toFixed(2)}"><input data-f="emoji" value="${esc(c.emoji)}"><label class="muted"><input data-f="required" type="checkbox"${c.required?" checked":""}> req</label><button class="primary">Save</button>`; row.querySelector("button").onclick=async()=>{const p={name:row.querySelector('[data-f="name"]').value,timing:row.querySelector('[data-f="timing"]').value,price:parseFloat(row.querySelector('[data-f="price"]').value),emoji:row.querySelector('[data-f="emoji"]').value,required:row.querySelector('[data-f="required"]').checked};try{await api(`/api/chores/${c.id}`,{method:"PUT",body:JSON.stringify(p)});await loadChores();await loadReport()}catch(e){alert(e.message)}}; box.appendChild(row)})}catch(e){box.innerHTML=`<p class="error">${esc(e.message)}</p>`}}
+async function loadReport(){const box=$("report");box.innerHTML="Loading...";try{const rows=await api("/api/report");if(!rows.length){box.innerHTML="<p>No children have completed chores yet.</p>";return}box.innerHTML="";rows.forEach(ch=>{const div=document.createElement("div");div.className="soft";let html=`<h4>${esc(ch.childName)}: ${money(ch.total)} last 7 days · ${money(ch.unpaid)} ready to pay</h4>`; if(!ch.items.length)html+="<p>No chores completed.</p>"; else html+=`<table><thead><tr><th>Chore</th><th>Timing</th><th>Count</th><th>Value</th></tr></thead><tbody>${ch.items.map(i=>`<tr><td>${esc(i.emoji)} ${esc(i.name)} ${i.required?'<span class="pill required">required</span>':''}</td><td>${esc(i.timing)}</td><td>${i.count}</td><td>${money(i.value)}</td></tr>`).join("")}</tbody></table>`; div.innerHTML=html;box.appendChild(div)})}catch(e){box.innerHTML=`<p class="error">${esc(e.message)}</p>`}}
+async function loadReconcile(){const box=$("reconcile");box.innerHTML="Loading...";try{const rows=await api("/api/reconcile-summary");if(!rows.length){box.innerHTML="<p>No children to reconcile.</p>";return}box.innerHTML=`<table><thead><tr><th>Child</th><th>Ready</th><th>Paid total</th><th>Pay</th></tr></thead><tbody></tbody></table>`;const tb=box.querySelector("tbody");rows.forEach(r=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${esc(r.childName)}</td><td>${money(r.earned)} <span class="muted">(${r.unpaidCompletionCount} items)</span></td><td>${money(r.currentBalance)}</td><td></td>`;const b=document.createElement("button");b.className=r.earned>0?"success":"";b.textContent=r.earned>0?`Pay ${money(r.earned)}`:"Add payment";b.onclick=async()=>{const amount=parseFloat(prompt(`How much did you pay ${r.childName}?`,r.earned?r.earned.toFixed(2):""));if(isNaN(amount)||amount<=0)return alert("Invalid amount");const note=prompt("Optional note","Allowance paid")||"Allowance paid";try{await api("/api/reconcile",{method:"POST",body:JSON.stringify({childName:r.childName,amount,note})});await loadReconcile();await loadReport();await loadPayments()}catch(e){alert(e.message)}};tr.lastChild.appendChild(b);tb.appendChild(tr)})}catch(e){box.innerHTML=`<p class="error">${esc(e.message)}</p>`}}
+async function loadPayments(){const box=$("payments");box.innerHTML="Loading...";try{const rows=await api("/api/payments");if(!rows.length){box.innerHTML="<p>No payments recorded yet.</p>";return}box.innerHTML=`<table><thead><tr><th>When</th><th>Child</th><th>Amount</th><th>Note</th></tr></thead><tbody>${rows.map(p=>`<tr><td>${new Date(p.timestamp).toLocaleString()}</td><td>${esc(p.childName)}</td><td>${money(p.amount)}</td><td>${esc(p.note)}</td></tr>`).join("")}</tbody></table>`}catch(e){box.innerHTML=`<p class="error">${esc(e.message)}</p>`}}
 
-    // LOGIN
-    document.getElementById("login-btn").addEventListener("click", async () => {
-      const nameInput = document.getElementById("name-input");
-      const errorDiv = document.getElementById("login-error");
-      errorDiv.textContent = "";
-
-      const name = nameInput.value.trim();
-      if (!name) {
-        errorDiv.textContent = "Please enter a name.";
-        return;
-      }
-
-      try {
-        const user = await api("/api/login", {
-          method: "POST",
-          body: JSON.stringify({ name }),
-        });
-        currentUser = user;
-
-        // Show appropriate UI
-        if (user.role === "parent") {
-          document.getElementById("parent-name").textContent = user.name;
-          hide("login-card");
-          show("parent-ui");
-        } else {
-          document.getElementById("child-name").textContent = user.name;
-          hide("login-card");
-          show("child-ui");
-          await loadChildView();
-        }
-      } catch (err) {
-        errorDiv.textContent = err.message;
-      }
-    });
-
-    document.getElementById("parent-switch-btn").addEventListener("click", () => {
-      currentUser = null;
-      show("login-card");
-      hide("parent-ui");
-      document.getElementById("name-input").value = "";
-    });
-
-    document.getElementById("child-switch-btn").addEventListener("click", () => {
-      currentUser = null;
-      show("login-card");
-      hide("child-ui");
-      document.getElementById("name-input").value = "";
-    });
-
-    // PARENT: create chore
-    document.getElementById("create-chore-btn").addEventListener("click", async () => {
-      const nameEl = document.getElementById("chore-name");
-      const timingEl = document.getElementById("chore-timing");
-      const priceEl = document.getElementById("chore-price");
-      const emojiEl = document.getElementById("chore-emoji");
-      const requiredEl = document.getElementById("chore-required");
-      const msgEl = document.getElementById("create-chore-msg");
-
-      msgEl.textContent = "";
-
-      const name = nameEl.value.trim();
-      const timing = timingEl.value;
-      const price = parseFloat(priceEl.value);
-      const emoji = emojiEl.value.trim();
-      const required = requiredEl.checked;
-
-      if (!name || isNaN(price)) {
-        msgEl.style.color = "#f97373";
-        msgEl.textContent = "Chore name and price are required.";
-        return;
-      }
-
-      try {
-        const chore = await api("/api/chores", {
-          method: "POST",
-          body: JSON.stringify({ name, timing, price, emoji, required }),
-        });
-        msgEl.style.color = "#6ee7b7";
-        msgEl.textContent = "Chore created: " + chore.emoji + " " + chore.name;
-
-        // reset form a bit
-        nameEl.value = "";
-        priceEl.value = "";
-        emojiEl.value = "";
-        requiredEl.checked = false;
-      } catch (err) {
-        msgEl.style.color = "#f97373";
-        msgEl.textContent = err.message;
-      }
-    });
-
-    // PARENT: report
-    document.getElementById("refresh-report-btn").addEventListener("click", async () => {
-      const container = document.getElementById("report-container");
-      container.innerHTML = "Loading...";
-
-      try {
-        const report = await api("/api/report");
-
-        if (!report.length) {
-          container.innerHTML = "<p>No children have completed chores in the last week.</p>";
-          return;
-        }
-
-        container.innerHTML = "";
-        report.forEach(child => {
-          const div = document.createElement("div");
-          div.style.marginBottom = "16px";
-
-          const header = document.createElement("h4");
-          header.textContent = `Child: ${child.childName} (Total: ${fmtMoney(child.total)})`;
-          div.appendChild(header);
-
-          if (!child.items.length) {
-            const p = document.createElement("p");
-            p.textContent = "No chores completed in the last week.";
-            div.appendChild(p);
-          } else {
-            const table = document.createElement("table");
-            const thead = document.createElement("thead");
-            thead.innerHTML = "<tr><th>Chore</th><th>Timing</th><th>Count</th><th>Value</th></tr>";
-            table.appendChild(thead);
-
-            const tbody = document.createElement("tbody");
-            child.items.forEach(item => {
-              const tr = document.createElement("tr");
-              tr.innerHTML = `
-                <td>${item.emoji} ${item.name} ${item.required ? '<span class="pill required">required</span>' : ""}</td>
-                <td>${item.timing}</td>
-                <td>${item.count}</td>
-                <td>${fmtMoney(item.value)}</td>
-              `;
-              tbody.appendChild(tr);
-            });
-
-            table.appendChild(tbody);
-            div.appendChild(table);
-          }
-
-          container.appendChild(div);
-        });
-      } catch (err) {
-        container.innerHTML = `<p style="color:#f97373;">${err.message}</p>`;
-      }
-    });
-
-    // PARENT: reconcile
-    document.getElementById("load-reconcile-btn").addEventListener("click", async () => {
-      const container = document.getElementById("reconcile-container");
-      container.innerHTML = "Loading...";
-
-      try {
-        const summary = await api("/api/reconcile-summary");
-
-        if (!summary.length) {
-          container.innerHTML = "<p>No children to reconcile.</p>";
-          return;
-        }
-
-        const table = document.createElement("table");
-        const thead = document.createElement("thead");
-        thead.innerHTML = "<tr><th>Child</th><th>Earned (last week)</th><th>Current balance</th><th>Pay</th></tr>";
-        table.appendChild(thead);
-
-        const tbody = document.createElement("tbody");
-        summary.forEach(row => {
-          const tr = document.createElement("tr");
-
-          const childTd = document.createElement("td");
-          childTd.textContent = row.childName;
-
-          const earnedTd = document.createElement("td");
-          earnedTd.textContent = fmtMoney(row.earned);
-
-          const balTd = document.createElement("td");
-          balTd.textContent = fmtMoney(row.currentBalance);
-
-          const actionTd = document.createElement("td");
-          const btn = document.createElement("button");
-          btn.textContent = row.earned > 0 ? `Pay ${fmtMoney(row.earned)}` : "Add custom";
-          btn.addEventListener("click", async () => {
-            const defaultAmount = row.earned > 0 ? row.earned : 0;
-            const input = prompt(
-              `How much to transfer to ${row.childName}?`,
-              defaultAmount ? defaultAmount.toFixed(2) : ""
-            );
-            if (!input) return;
-            const amount = parseFloat(input);
-            if (isNaN(amount) || amount <= 0) {
-              alert("Invalid amount");
-              return;
-            }
-            try {
-              const result = await api("/api/reconcile", {
-                method: "POST",
-                body: JSON.stringify({ childName: row.childName, amount }),
-              });
-              alert(
-                `Transferred ${fmtMoney(result.amount)} to ${result.childName}. New balance: ${fmtMoney(result.newBalance)}`
-              );
-              // Refresh summary
-              document.getElementById("load-reconcile-btn").click();
-            } catch (err) {
-              alert(err.message);
-            }
-          });
-          actionTd.appendChild(btn);
-
-          tr.appendChild(childTd);
-          tr.appendChild(earnedTd);
-          tr.appendChild(balTd);
-          tr.appendChild(actionTd);
-          tbody.appendChild(tr);
-        });
-
-        table.appendChild(tbody);
-        container.innerHTML = "";
-        container.appendChild(table);
-      } catch (err) {
-        container.innerHTML = `<p style="color:#f97373;">${err.message}</p>`;
-      }
-    });
-
-    // CHILD: load view (completions + chores)
-    async function loadChildView() {
-      if (!currentUser) return;
-      const name = currentUser.name;
-
-      // Completed chores
-      const completionsDiv = document.getElementById("child-completions");
-      completionsDiv.innerHTML = "Loading...";
-      const balSpan = document.getElementById("child-balance");
-
-      try {
-        const data = await api(`/api/child/${encodeURIComponent(name)}/completions`);
-        balSpan.textContent = fmtMoney(data.balance);
-
-        if (!data.items.length) {
-          completionsDiv.innerHTML = "<p>No chores completed in the last 7 days yet.</p>";
-        } else {
-          const table = document.createElement("table");
-          const thead = document.createElement("thead");
-          thead.innerHTML = "<tr><th>Chore</th><th>Timing</th><th>Count</th><th>Value</th></tr>";
-          table.appendChild(thead);
-          const tbody = document.createElement("tbody");
-
-          data.items.forEach(item => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-              <td>${item.emoji} ${item.name} ${item.required ? '<span class="pill required">required</span>' : ""}</td>
-              <td>${item.timing}</td>
-              <td>${item.count}</td>
-              <td>${fmtMoney(item.value)}</td>
-            `;
-            tbody.appendChild(tr);
-          });
-
-          table.appendChild(tbody);
-          completionsDiv.innerHTML = "";
-          completionsDiv.appendChild(table);
-
-          const note = document.createElement("p");
-          note.innerHTML = `<small>Total potential value: ${fmtMoney(
-            data.total
-          )}. Your parent still needs to reconcile to move this into your balance.</small>`;
-          completionsDiv.appendChild(note);
-        }
-      } catch (err) {
-        completionsDiv.innerHTML = `<p style="color:#f97373;">${err.message}</p>`;
-      }
-
-      // Available chores
-      const choresDiv = document.getElementById("child-chores");
-      choresDiv.innerHTML = "Loading...";
-      try {
-        const chores = await api("/api/chores");
-        if (!chores.length) {
-          choresDiv.innerHTML = "<p>No chores available yet. Ask a parent to add some.</p>";
-          return;
-        }
-
-        const table = document.createElement("table");
-        const thead = document.createElement("thead");
-        thead.innerHTML = "<tr><th>Chore</th><th>Timing</th><th>Price</th><th></th></tr>";
-        table.appendChild(thead);
-        const tbody = document.createElement("tbody");
-
-        chores.forEach(chore => {
-          const tr = document.createElement("tr");
-          const btn = document.createElement("button");
-          btn.textContent = "I did this!";
-          btn.addEventListener("click", async () => {
-            try {
-              await api(`/api/child/${encodeURIComponent(name)}/complete`, {
-                method: "POST",
-                body: JSON.stringify({ choreId: chore.id }),
-              });
-              alert(`Nice work! Recorded: ${chore.emoji} ${chore.name}`);
-              await loadChildView();
-            } catch (err) {
-              alert(err.message);
-            }
-          });
-
-          const pill = chore.required ? '<span class="pill required">required</span>' : "";
-
-          tr.innerHTML = `
-            <td>${chore.emoji} ${chore.name} ${pill}</td>
-            <td>${chore.timing}</td>
-            <td>${fmtMoney(chore.price)}</td>
-            <td></td>
-          `;
-          tr.lastElementChild.appendChild(btn);
-
-          tbody.appendChild(tr);
-        });
-
-        table.appendChild(tbody);
-        choresDiv.innerHTML = "";
-        choresDiv.appendChild(table);
-      } catch (err) {
-        choresDiv.innerHTML = `<p style="color:#f97373;">${err.message}</p>`;
-      }
-    }
-  </script>
+async function loadChild(){const name=currentUser.name; $("kidMenu").innerHTML=$("kidDone").innerHTML="Loading...";try{const today=await api(`/api/child/${encodeURIComponent(name)}/today`);$("balance").textContent=money(today.balance);$("todayTotal").textContent=money(today.todayTotal);$("weekTotal").textContent=money(today.weekTotal);$("unpaidTotal").textContent=money(today.unpaidTotal); if(!today.availableChores.length){$("kidMenu").innerHTML="<p>Nothing left on today's menu. Suspiciously productive.</p>"}else{const grid=document.createElement("div");grid.className="menu";today.availableChores.forEach(c=>{const tile=document.createElement("div");tile.className="tile";tile.innerHTML=`<div class="emoji">${esc(c.emoji)}</div><div class="name">${esc(c.name)}</div><div>${c.required?'<span class="pill required">required</span>':""} ${c.repeatable?'<span class="pill repeatable">repeatable</span>':""}</div><div class="muted">${esc(c.timing)}</div><div class="price">${money(c.price)}</div><div class="push"></div>`;const b=document.createElement("button");b.className="success";b.textContent="I did this!";b.onclick=async()=>{try{await api(`/api/child/${encodeURIComponent(name)}/complete`,{method:"POST",body:JSON.stringify({choreId:c.id})});await loadChild()}catch(e){alert(e.message)}};tile.querySelector(".push").appendChild(b);grid.appendChild(tile)});$("kidMenu").innerHTML="";$("kidMenu").appendChild(grid)}}catch(e){$("kidMenu").innerHTML=`<p class="error">${esc(e.message)}</p>`}
+try{const data=await api(`/api/child/${encodeURIComponent(name)}/completions`);if(!data.items.length){$("kidDone").innerHTML="<p>No chores completed in the last 7 days yet.</p>"}else{$("kidDone").innerHTML=`<table><thead><tr><th>Chore</th><th>Timing</th><th>Count</th><th>Value</th></tr></thead><tbody>${data.items.map(i=>`<tr><td>${esc(i.emoji)} ${esc(i.name)} ${i.required?'<span class="pill required">required</span>':''}</td><td>${esc(i.timing)}</td><td>${i.count}</td><td>${money(i.value)}</td></tr>`).join("")}</tbody></table><p><small>Total completed: ${money(data.total)}. Ready to pay: ${money(data.unpaidTotal)}.</small></p>`}}catch(e){$("kidDone").innerHTML=`<p class="error">${esc(e.message)}</p>`}}
+</script>
 </body>
 </html>
